@@ -1,0 +1,217 @@
+
+library(tidyverse)
+library(dplyr)
+library(tidytext)
+
+#Read dataset
+anime<-read.csv("animes.csv",header=TRUE,sep=",")
+#head(anime,10)
+
+#Remove synopsis column from dataset
+#anime=subset(anime,select=-c(synopsis))
+
+#Clean synopsis
+anime$synopsis <- tolower(anime$synopsis) # Lowercase
+anime$synopsis <- gsub("[[:punct:]]", " ", anime$synopsis) # Remove punctuation
+anime$synopsis <- gsub("[[:digit:]]", " ", anime$synopsis)# Remove numbers
+anime$synopsis <- gsub("[^[:alnum:]]", " ", anime$synopsis)# Remove non alphanumeric characters
+anime$synopsis <- gsub("\\s+", " ", str_trim(anime$synopsis))# Remove extra whitespaces
+anime$synopsis[1]
+
+#Clean genre
+anime$genre <- tolower(anime$genre) # Lowercase
+anime$genre <- gsub("[[:punct:]]", "", anime$genre) # Remove punctuation
+anime$genre <- gsub("[[:digit:]]", "", anime$genre) # Remove numbers
+anime$genre <- gsub("\\s+", " ", str_trim(anime$genre))# Remove extra whitespaces
+anime$genre[1]
+
+#Vocab Metrics for Genre
+vocab <- anime %>% 
+  unnest_tokens(word, genre)
+head(vocab)
+
+#Remove images and links from dataset
+anime=subset(anime,select=-c(img_url,link))
+
+#Views the attributes in the dataset
+names(anime)
+
+#Structure of the dataset
+str(anime)
+
+#Summarising each attribute in the dataset
+summary(anime)
+
+#Identifying missing values
+#test <-is.na(anime)
+
+anime[!complete.cases(anime),]
+
+#removes rows with na values
+anime <- na.omit(anime)
+
+#remove rows with no genre
+empty<- c('[]')
+
+
+#checking for rows without genre
+anime %>%
+  group_by(uid) %>%
+  filter(all(genre %in% empty) & empty %in% genre)
+
+#removing rows without genre
+anime<-anime[!(anime$genre==empty),]
+
+
+#remove the rows with 1 episode (most likely its a movie)
+
+#checking for rows without genre
+anime %>%
+  group_by(uid) %>%
+  filter(all(episodes %in% 1) & 1 %in% episodes)
+
+#anime<-anime[!(anime$episodes==1),]
+
+
+#checking if there are any remaining columns with na values
+anime[!complete.cases(anime),]
+
+#Length of dataframe
+nrow(anime)
+
+#Summarising each attribute in the dataset
+summary(anime)
+
+#Summary of genre
+summary(anime$genre)
+
+#Removing the duplicates by id number
+anime<-anime[!duplicated(anime$uid),]
+
+
+#Plots
+
+#Are the anime that are popular also ranked highly? 
+#rank=1 and popular=1 is the highest
+plot(anime$popularity, anime$ranked, main="Popularity and Rank",
+     xlab="Popularity of the Anime ", ylab="Ranked of Anime ")
+
+#Are the anime that are popular also score highly
+plot(anime$popularity, anime$score, main="Popularity and Score",
+     xlab="Popularity of the Anime ", ylab="Score of Anime ")
+
+#Does the number of episodes affect the rank? Rank based on episodes
+plot(anime$ranked, anime$episodes,  main="Rank based on episodes",
+     xlab="Rank of Anime", ylab="Number of episodes in the Anime ")
+
+#Does the number of episodes affect the score? Score based on episodes
+plot( anime$score, anime$episodes, main="Score based on episodes",
+      xlab="Score of Anime ",ylab="Number of episodes in the Anime ")
+
+#Does the number of episodes affect the popularity? Popularity based on episodes
+plot(anime$popularity,anime$episodes, main="Popularity based on episodes",
+     xlab="Popularity of Anime" ,ylab="Number of episodes in the Anime " )
+
+#Does the number of episodes affect the members? Members based on episodes
+plot(anime$members,anime$episodes, main="Members based on episodes",
+     xlab="Number of members in Anime" ,ylab="Number of episodes in the Anime " )
+
+# Count of genre in general
+genre.string <- paste (anime$genre)
+genre.vector=gsub("[[:punct:]]", "", genre.string)
+genre.string <- paste ( genre.vector , collapse = " " )
+genre.string<-strsplit(genre.string," ")
+genre.string.freq<-table(genre.string)
+
+#Converting table to dataframe
+genre1<-as.data.frame(genre.string.freq)
+
+genre1$genre.string <- as.character(genre1$genre.string)
+genre1$genre.string[genre1$genre.string=="Slice"] <-"Slice of Life"
+genre1$genre.string[genre1$genre.string=="Super"] <-"Super Power"
+
+genre1<-genre1[!(genre1$genre.string=="of"),]
+genre1<-genre1[!(genre1$genre.string=="Life"),]
+genre1<-genre1[!(genre1$genre.string=="Power"),]
+#genre1<-genre1[!(genre1$genre.string=="Power"),]
+
+#Frequency of the genre/ Number of times each genre appears
+ggplot(data=genre1, aes(x=genre.string, y=Freq)) +
+  geom_bar(stat="identity", width=0.5)
+
+
+# Count of genre based on the highest score
+#Genre based on ranked
+score<-anime[(anime$score>=7),]
+
+# Count of genre
+score.string <- paste (score$genre)
+score.vector=gsub("[[:punct:]]", "", score.string)
+score.string <- paste ( score.vector , collapse = " " )
+score.string<-strsplit(score.string," ")
+score.string.freq<-table(score.string)
+
+#Converting table to dataframe
+score1<-as.data.frame(score.string.freq)
+
+score1$score.string <- as.character(score1$score.string)
+score1$score.string[score1$score.string=="Slice"] <-"Slice of Life"
+score1$score.string[score1$score.string=="Super"] <-"Super Power"
+
+score1<-score1[!(score1$score.string=="of"),]
+score1<-score1[!(score1$score.string=="Life"),]
+score1<-score1[!(score1$score.string=="Power"),]
+#genre1<-genre1[!(genre1$genre.string=="Power"),]
+
+#Frequency of the genre/ Number of times each genre appears
+ggplot(data=score1, aes(x=score.string, y=Freq)) +
+  geom_bar(stat="identity", width=0.5)
+
+
+
+# Count of genre based on the most popular
+#Genre based on popularity
+popularity<-anime[(anime$popularity<=3714),]
+
+# Count of genre
+popularity.string <- paste (popularity$genre)
+popularity.vector=gsub("[[:punct:]]", "", popularity.string)
+popularity.string <- paste ( popularity.vector , collapse = " " )
+popularity.string<-strsplit(popularity.string," ")
+popularity.string.freq<-table(popularity.string)
+
+#Converting table to dataframe
+popularity1<-as.data.frame(popularity.string.freq)
+
+popularity1$popularity.string <- as.character(popularity1$popularity.string)
+popularity1$popularity.string[popularity1$popularity.string=="Slice"] <-"Slice of Life"
+popularity1$popularity.string[popularity1$popularity.string=="Super"] <-"Super Power"
+
+popularity1<-popularity1[!(popularity1$popularity.string=="of"),]
+popularity1<-popularity1[!(popularity1$popularity.string=="Life"),]
+popularity1<-popularity1[!(popularity1$popularity.string=="Power"),]
+#genre1<-genre1[!(genre1$genre.string=="Power"),]
+
+#Frequency of the genre/ Number of times each genre appears
+ggplot(data=popularity1, aes(x=popularity.string, y=Freq)) +
+  geom_bar(stat="identity", width=0.5)
+
+
+#The most popular anime
+
+#The highest rated anime
+
+#The anime genre with the most popular animes
+#The anime genre with the lowest popular animes
+
+
+#Genre based on rank
+#The anime genre with the highest ranked animes
+#The anime genre with the lowest popular animes
+
+#Genre based on episodes, rank and popularity
+
+#Consider shows with multiple seasons
+#Length of the anime run
+
+

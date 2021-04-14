@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1617647846623.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1003336746",
+    "id" : "3B142304",
+    "lastKnownWriteTime" : 1617964787,
+    "last_content_update" : 1617964787554,
+    "path" : "~/R/Data Mining Project/project.R",
+    "project_path" : "project.R",
+    "properties" : {
+        "cursorPosition" : "210,0",
+        "scrollLine" : "190",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
